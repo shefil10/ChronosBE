@@ -1,4 +1,5 @@
 import express from "express";
+
 import {
   createProduct,
   getAllProducts,
@@ -6,15 +7,32 @@ import {
   updateProduct,
   deleteProduct,
 } from "../controllers/productController.js";
+
 import { protect, adminOnly } from "../middleware/authMiddleware.js";
+
+import upload from "../middleware/uploadMiddleware.js";
 
 const productRouter = express.Router();
 
-// Only logged-in admins can add products
-productRouter.post("/", protect, adminOnly, createProduct);
+// ADD PRODUCT WITH IMAGE
+productRouter.post(
+  "/",
+  protect,
+  adminOnly,
+  upload.single("image"),
+  createProduct,
+);
+
 // GET ALL PRODUCTS
 productRouter.get("/", getAllProducts);
+
+// GET SINGLE PRODUCT
 productRouter.get("/:id", getSingleProduct);
+
+// UPDATE PRODUCT
 productRouter.put("/:id", protect, adminOnly, updateProduct);
+
+// DELETE PRODUCT
 productRouter.delete("/:id", protect, adminOnly, deleteProduct);
+
 export default productRouter;

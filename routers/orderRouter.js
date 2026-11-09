@@ -6,17 +6,21 @@ import {
   createOrder,
   getMyOrders,
   getAllOrders,
+  updateOrderStatus,
 } from "../controllers/orderController.js";
 
 const orderRouter = express.Router();
 
-// Create order
+// Customer: Create order
 orderRouter.post("/", protect, createOrder);
 
-// Get logged-in user's orders
+// Customer: Get my orders
 orderRouter.get("/my-orders", protect, getMyOrders);
 
 // Admin: Get all orders
 orderRouter.get("/admin/all", protect, adminOnly, getAllOrders);
+
+// Admin: Update order status
+orderRouter.patch("/:id/status", protect, adminOnly, updateOrderStatus);
 
 export default orderRouter;

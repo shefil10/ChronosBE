@@ -6,6 +6,7 @@ import authRouter from "./routers/authRouter.js";
 import userRouter from "./routers/userRouter.js";
 import productRouter from "./routers/productRouter.js";
 import orderRouter from "./routers/orderRouter.js";
+import categoryRouter from "./routers/categoryRouter.js";
 
 dotenv.config();
 
@@ -24,6 +25,7 @@ app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/products", productRouter);
 app.use("/api/v1/orders", orderRouter);
+app.use("/api/v1/categories", categoryRouter);
 
 app.get("/", (req, res) => {
   res.send("Welcome to CHRONOS Backend");
