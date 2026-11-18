@@ -15,10 +15,18 @@ const orderSchema = new mongoose.Schema(
           ref: "Product",
           required: true,
         },
+
         quantity: {
           type: Number,
           required: true,
           min: 1,
+        },
+
+        // Selected size for this product
+        size: {
+          type: String,
+          default: "",
+          trim: true,
         },
       },
     ],

@@ -6,7 +6,7 @@ export const createOrder = async (req, res) => {
   try {
     const { products, shippingAddress } = req.body;
 
-    if (!products || products.length === 0 || !shippingAddress) {
+    if (!Array.isArray(products) || products.length === 0 || !shippingAddress) {
       return res.status(400).json({
         success: false,
         message: "Products and shipping address are required",
@@ -15,8 +15,26 @@ export const createOrder = async (req, res) => {
 
     let totalAmount = 0;
     const orderProducts = [];
+    const stockRequirements = {};
 
+    // Validate products and calculate stock requirements
     for (const item of products) {
+      if (!item.product) {
+        return res.status(400).json({
+          success: false,
+          message: "Product ID is required",
+        });
+      }
+
+      const quantity = Number(item.quantity);
+
+      if (!Number.isInteger(quantity) || quantity < 1) {
+        return res.status(400).json({
+          success: false,
+          message: "Quantity must be at least 1",
+        });
+      }
+
       const product = await Product.findById(item.product);
 
       if (!product) {
@@ -26,28 +44,57 @@ export const createOrder = async (req, res) => {
         });
       }
 
-      if (!Number.isInteger(item.quantity) || item.quantity < 1) {
-        return res.status(400).json({
-          success: false,
-          message: "Quantity must be at least 1",
-        });
+      const selectedSize = String(item.size || "").trim();
+
+      // Validate size if the product has available sizes
+      const availableSizes = Array.isArray(product.size) ? product.size : [];
+
+      if (availableSizes.length > 0) {
+        if (!selectedSize) {
+          return res.status(400).json({
+            success: false,
+            message: `Please select a size for ${product.name}`,
+          });
+        }
+
+        if (!availableSizes.includes(selectedSize)) {
+          return res.status(400).json({
+            success: false,
+            message: `Invalid size selected for ${product.name}`,
+          });
+        }
       }
 
-      if (product.stock < item.quantity) {
-        return res.status(400).json({
-          success: false,
-          message: `Not enough stock for ${product.name}`,
-        });
-      }
+      // Check total stock for the same product across sizes
+      const productId = product._id.toString();
 
-      totalAmount += product.price * item.quantity;
+      stockRequirements[productId] =
+        (stockRequirements[productId] || 0) + quantity;
+
+      totalAmount += product.price * quantity;
 
       orderProducts.push({
         product: product._id,
-        quantity: item.quantity,
+        quantity,
+        size: selectedSize,
       });
     }
 
+    // Verify available stock before creating the order
+    for (const [productId, requiredQuantity] of Object.entries(
+      stockRequirements,
+    )) {
+      const product = await Product.findById(productId);
+
+      if (!product || product.stock < requiredQuantity) {
+        return res.status(400).json({
+          success: false,
+          message: `Not enough stock for ${product?.name || "product"}`,
+        });
+      }
+    }
+
+    // Create order
     const order = await Order.create({
       user: req.user._id,
       products: orderProducts,
@@ -55,10 +102,10 @@ export const createOrder = async (req, res) => {
       shippingAddress,
     });
 
-    // Reduce product stock after order creation
-    for (const item of products) {
-      await Product.findByIdAndUpdate(item.product, {
-        $inc: { stock: -item.quantity },
+    // Reduce product stock
+    for (const [productId, quantity] of Object.entries(stockRequirements)) {
+      await Product.findByIdAndUpdate(productId, {
+        $inc: { stock: -quantity },
       });
     }
 
@@ -74,6 +121,7 @@ export const createOrder = async (req, res) => {
     });
   }
 };
+
 // GET MY ORDERS
 export const getMyOrders = async (req, res) => {
   try {

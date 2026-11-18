@@ -14,14 +14,8 @@ import upload from "../middleware/uploadMiddleware.js";
 
 const productRouter = express.Router();
 
-// ADD PRODUCT WITH IMAGE
-productRouter.post(
-  "/",
-  protect,
-  adminOnly,
-  upload.single("image"),
-  createProduct,
-);
+// CREATE PRODUCT WITH MULTIPLE IMAGES
+productRouter.post("/", protect, adminOnly, upload.any(), createProduct);
 
 // GET ALL PRODUCTS
 productRouter.get("/", getAllProducts);
@@ -29,8 +23,8 @@ productRouter.get("/", getAllProducts);
 // GET SINGLE PRODUCT
 productRouter.get("/:id", getSingleProduct);
 
-// UPDATE PRODUCT
-productRouter.put("/:id", protect, adminOnly, updateProduct);
+// UPDATE PRODUCT WITH MULTIPLE IMAGES
+productRouter.put("/:id", protect, adminOnly, upload.any(), updateProduct);
 
 // DELETE PRODUCT
 productRouter.delete("/:id", protect, adminOnly, deleteProduct);

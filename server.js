@@ -7,7 +7,7 @@ import userRouter from "./routers/userRouter.js";
 import productRouter from "./routers/productRouter.js";
 import orderRouter from "./routers/orderRouter.js";
 import categoryRouter from "./routers/categoryRouter.js";
-
+import brandRouter from "./routers/brandRoutes.js";
 dotenv.config();
 
 const app = express();
@@ -16,7 +16,12 @@ app.use(express.json());
 
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://localhost:5174"],
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "http://127.0.0.1:5173",
+      "http://127.0.0.1:5174",
+    ],
     credentials: true,
   }),
 );
@@ -26,6 +31,7 @@ app.use("/api/v1/users", userRouter);
 app.use("/api/v1/products", productRouter);
 app.use("/api/v1/orders", orderRouter);
 app.use("/api/v1/categories", categoryRouter);
+app.use("/api/v1/brands", brandRouter);
 
 app.get("/", (req, res) => {
   res.send("Welcome to CHRONOS Backend");
